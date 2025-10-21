@@ -1,18 +1,16 @@
 # Note Generator - Whisper AI Transcription
 
-A Python library for transcribing audio recordings into text notes using OpenAI's Whisper AI API.
+A Python library for transcribing audio recordings into text notes using OpenAI's API.
 
 ## Features
 
-- **Two-step AI pipeline** - Whisper for transcription + GPT for intelligent formatting
+- **Two-step AI pipeline** - GPT for transcription + formatting
 - **Interactive frontend** (main.py) - Easy-to-use menu interface
 - **YouTube support** - Download and transcribe YouTube videos directly
 - **Note templates** - 5 different formats (study guides, meeting minutes, instructions, etc.)
 - **Smart formatting** - GPT structures raw transcripts into organized notes
 - **Simple setup** with `.env` file for API key management
 - **Multiple audio formats** supported (mp3, wav, m4a, flac, ogg, mp4, webm)
-- **Fast cloud processing** - no local GPU needed
-- **Cost transparency** - See estimated costs before processing
 - **Clean separation** - Transcription and formatting as separate steps
 
 ## Installation
@@ -51,21 +49,11 @@ Note Generator uses a **two-step AI pipeline** for superior results:
 ### Step 1: Transcription (Whisper API)
 - Converts audio to raw text
 - Handles any language
-- Processes ~$0.006/minute
 
 ### Step 2: Formatting (GPT API)
 - Structures the raw transcript
 - Applies your chosen template (study guide, meeting minutes, etc.)
 - Organizes information intelligently
-- Processes ~$0.01-0.05 per transcription (depending on length)
-
-**Why two steps?**
-- ✅ **Whisper** excels at transcription but cannot structure content
-- ✅ **GPT** excels at formatting and organizing text
-- ✅ Better results than single-step approaches
-- ✅ Flexibility to transcribe once, format multiple ways
-
-**Total Cost:** Typically $0.02-0.10 per transcription depending on audio length and template used.
 
 ## Quick Start
 
@@ -265,119 +253,6 @@ audio_file.unlink()
 - **Cleanup option** - Optionally delete downloaded files after transcription
 - **Video information** - Shows video title and duration before processing
 
-## API Reference
-
-### Transcriber Class
-
-Handles audio transcription using OpenAI's Whisper API.
-
-#### `__init__(api_key=None, model='whisper-1')`
-
-Initialize the transcriber.
-
-- `api_key` (optional): OpenAI API key. If None, loads from `OPENAI_KEY` in `.env` file
-- `model`: Whisper model to use (default: 'whisper-1')
-
-#### `transcribe_to_text(audio_input, language=None, **kwargs)`
-
-Transcribe audio and return plain text.
-
-**Args:**
-- `audio_input`: Path to audio file
-- `language` (optional): Language code (e.g., 'en', 'es', 'fr')
-- `**kwargs`: Additional options (prompt, temperature)
-
-**Returns:** `str` - Raw transcribed text
-
-**Example:**
-```python
-raw_text = transcriber.transcribe_to_text('meeting.mp3', language='en')
-```
-
-#### `transcribe_with_timestamps(audio_input, language=None, **kwargs)`
-
-Transcribe audio with timestamp information for each segment.
-
-**Args:**
-- `audio_input`: Path to audio file
-- `language` (optional): Language code
-
-**Returns:** `list[dict]` - List of segments with 'start', 'end', and 'text'
-
-**Example:**
-```python
-segments = transcriber.transcribe_with_timestamps('lecture.mp3')
-for segment in segments:
-    print(f"[{segment['start']:.2f}s] {segment['text']}")
-```
-
-### NoteGenerator Class
-
-Formats raw transcriptions into structured notes using OpenAI's GPT API.
-
-#### `__init__(api_key=None, model='gpt-3.5-turbo')`
-
-Initialize the note generator.
-
-- `api_key` (optional): OpenAI API key. If None, loads from `OPENAI_KEY` in `.env` file
-- `model`: GPT model to use (default: 'gpt-3.5-turbo', can use 'gpt-4' for higher quality)
-
-#### `generate_notes(transcription, template, custom_instructions="")`
-
-Generate formatted notes from raw transcription using a template.
-
-**Args:**
-- `transcription`: Raw text from Whisper transcription
-- `template`: Template string with formatting instructions (use `load_template()` to load)
-- `custom_instructions` (optional): Additional instructions to append to the template
-
-**Returns:** `str` - Formatted notes
-
-**Example:**
-```python
-from src.note_templates import load_template
-
-template = load_template('study_guide')
-formatted_notes = note_generator.generate_notes(raw_text, template)
-```
-
-#### `estimate_cost(transcription, template)`
-
-Estimate the cost of generating notes before making the API call.
-
-**Args:**
-- `transcription`: Raw text from Whisper transcription
-- `template`: Template string
-
-**Returns:** `dict` with keys:
-- `input_tokens`: Estimated input token count
-- `output_tokens`: Estimated output token count
-- `estimated_cost_usd`: Estimated cost in USD
-- `model`: Model being used
-
-**Example:**
-```python
-cost_info = note_generator.estimate_cost(raw_text, template)
-print(f"Estimated cost: ${cost_info['estimated_cost_usd']:.4f}")
-```
-
-#### `generate_notes_streaming(transcription, template, custom_instructions="")`
-
-Generate notes with streaming output for real-time display.
-
-**Args:**
-- `transcription`: Raw text from Whisper transcription
-- `template`: Template string with formatting instructions
-- `custom_instructions` (optional): Additional instructions
-
-**Yields:** `str` - Chunks of formatted notes as they're generated
-
-**Example:**
-```python
-for chunk in note_generator.generate_notes_streaming(raw_text, template):
-    print(chunk, end='', flush=True)
-```
-
 ## Usage Examples
 
 ### Example 1: Simple Transcription (Raw Text Only)
@@ -462,8 +337,6 @@ if cost_info['estimated_cost_usd'] < 0.10:  # Less than 10 cents
 - WebM (.webm)
 - FLAC (.flac)
 
-**Max file size:** 25 MB (OpenAI API limit)
-
 ## Configuration
 
 ### Environment Variables
@@ -482,8 +355,6 @@ transcriber = Transcriber(api_key='your-api-key-here')
 ```
 
 ## Cost
-
-OpenAI Whisper API pricing: **~$0.006 per minute** of audio
 
 Check your usage at: [https://platform.openai.com/usage](https://platform.openai.com/usage)
 
@@ -531,30 +402,21 @@ notegenerator/
 │   ├── generate.py            # NoteGenerator class (GPT API)
 │   ├── note_templates.py      # Template management
 │   └── youtube_downloader.py  # YouTube audio downloader
-├── templates/                  # Note formatting templates
+├── templates/                 # Note formatting templates
 │   ├── study_guide.txt
 │   ├── meeting_minutes.txt
 │   ├── instructions.txt
 │   ├── summary.txt
 │   ├── verbatim_transcript.txt
 │   └── README.md
-├── example_transcribe.py      # Basic usage examples
-├── example_with_templates.py  # Template examples
+├── downloads/                 # Saved audio files
+├── notes/                     # Saved notes
 ├── .env.example               # Example environment file
 ├── .env                       # Your API key (git-ignored)
 ├── requirements.txt           # Python dependencies
 └── README.md                  # This file
 ```
 
-## Additional Implementations
-
-This project also includes optional local Whisper implementations:
-
-- `whisper_transcriber.py` - Local CPU/GPU transcription (free, offline)
-- `whisper_api_transcriber.py` - Full-featured API client with SRT/VTT support
-
-These are provided for reference but are not the primary implementation.
-
 ## License
 
-This project uses OpenAI's Whisper API. Refer to OpenAI's terms of service for API usage.
+This project uses OpenAI's API. Refer to OpenAI's terms of service for API usage.

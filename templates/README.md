@@ -1,6 +1,6 @@
 # Note Templates
 
-This folder contains prompt templates that format transcriptions for different use cases. Each template provides detailed instructions to the Whisper API on how to organize and structure the transcribed content.
+This folder contains prompt templates that format transcriptions for different use cases. Each template provides detailed instructions to the OpenAI API on how to organize and structure the transcribed content.
 
 ## Available Templates
 
@@ -130,16 +130,6 @@ template_id = NoteTemplates.get_template_id_from_user()
 prompt = templates.get_template(template_id)
 ```
 
-### Method 4: Run the Example Script
-
-```bash
-# Interactive menu
-python example_with_templates.py
-
-# Direct with audio file
-python example_with_templates.py your_audio.mp3
-```
-
 ## Template IDs
 
 Use these IDs when calling `get_template()` or `load_template()`:
@@ -180,10 +170,6 @@ Example:
 templates = NoteTemplates()
 my_template = templates.get_template('my_custom_template')
 ```
-
-## Examples
-
-See `example_with_templates.py` for complete working examples of all templates.
 
 ### Quick Example - Study Notes
 
