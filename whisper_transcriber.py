@@ -6,7 +6,7 @@ using OpenAI's Whisper model.
 """
 
 import os
-from typing import Optional, Union, Dict, Any
+from typing import Any
 from pathlib import Path
 
 
@@ -26,7 +26,7 @@ class WhisperTranscriber:
     SUPPORTED_MODELS = ['tiny', 'base', 'small', 'medium', 'large']
     SUPPORTED_FORMATS = ['.mp3', '.wav', '.m4a', '.flac', '.ogg', '.mp4', '.webm']
 
-    def __init__(self, model_size: str = 'base', device: Optional[str] = None):
+    def __init__(self, model_size: str = 'base', device: str | None = None):
         """
         Initialize the Whisper transcriber.
 
@@ -79,11 +79,11 @@ class WhisperTranscriber:
 
     def transcribe(
         self,
-        audio_input: Union[str, Path],
-        language: Optional[str] = None,
+        audio_input: str | Path,
+        language: str | None = None,
         task: str = "transcribe",
         **kwargs
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Transcribe an audio recording.
 
@@ -137,8 +137,8 @@ class WhisperTranscriber:
 
     def transcribe_to_text(
         self,
-        audio_input: Union[str, Path],
-        language: Optional[str] = None,
+        audio_input: str | Path,
+        language: str | None = None,
         **kwargs
     ) -> str:
         """
@@ -160,8 +160,8 @@ class WhisperTranscriber:
 
     def transcribe_with_timestamps(
         self,
-        audio_input: Union[str, Path],
-        language: Optional[str] = None,
+        audio_input: str | Path,
+        language: str | None = None,
         **kwargs
     ) -> list:
         """
@@ -190,9 +190,9 @@ class WhisperTranscriber:
 
     def save_transcription(
         self,
-        audio_input: Union[str, Path],
-        output_path: Union[str, Path],
-        language: Optional[str] = None,
+        audio_input: str | Path,
+        output_path: str | Path,
+        language: str | None = None,
         include_timestamps: bool = False,
         **kwargs
     ):
