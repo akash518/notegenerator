@@ -10,6 +10,7 @@ from pathlib import Path
 from transcribe import Transcriber
 from note_templates import NoteTemplates
 from youtube_downloader import YouTubeDownloader
+from generate import NoteGenerator
 
 
 class NoteGeneratorApp:
@@ -20,16 +21,18 @@ class NoteGeneratorApp:
         self.transcriber = None
         self.templates = None
         self.youtube_downloader = None
+        self.note_generator = None
 
         # Initialize components
         self._initialize_components()
 
     def _initialize_components(self):
-        """Initialize transcriber and template manager."""
+        """Initialize transcriber, note generator, and template manager."""
         try:
             self.transcriber = Transcriber()
             self.templates = NoteTemplates()
             self.youtube_downloader = YouTubeDownloader()
+            self.note_generator = NoteGenerator()
             return True
         except ValueError as e:
             print(f"\n❌ Error: {e}")
@@ -80,7 +83,7 @@ class NoteGeneratorApp:
         print("\nTransform your audio into organized, formatted notes!")
         print("✓ Support for audio files and YouTube videos")
         print("✓ 5 different note templates available")
-        print("✓ Powered by OpenAI Whisper API")
+        print("✓ Powered by OpenAI Whisper + GPT for formatting")
         print("="*70)
 
     def _show_main_menu(self) -> str:
@@ -244,7 +247,11 @@ class NoteGeneratorApp:
 
     def _transcribe_and_save(self, audio_path: Path, output_path: Path, template_id: str):
         """
-        Perform transcription and save the result.
+        Perform transcription, format with GPT, and save the result.
+
+        This is a two-step process:
+        1. Whisper API: Transcribe audio to raw text
+        2. GPT API: Format the raw text into structured notes
 
         Args:
             audio_path: Path to the audio file
@@ -252,40 +259,66 @@ class NoteGeneratorApp:
             template_id: Template ID to use
         """
         try:
-            print(f"\n📝 Transcribing: {audio_path.name}")
+            print(f"\n📝 Processing: {audio_path.name}")
             print(f"📋 Template: {self.templates.TEMPLATE_INFO[template_id]['name']}")
             print(f"💾 Output: {output_path}")
-            print("\n⏳ Processing... (this may take a few minutes)")
 
-            # Load template
-            prompt = self.templates.get_template(template_id)
+            # Step 1: Transcribe with Whisper
+            print("\n" + "-"*70)
+            print("STEP 1/2: Transcribing audio with Whisper...")
+            print("-"*70)
+            print("⏳ This may take a few minutes depending on audio length...")
 
-            # Transcribe and save
-            saved_path = self.transcriber.transcribe_and_save(
+            raw_transcription = self.transcriber.transcribe_to_text(
                 audio_path,
-                output_path,
-                prompt=prompt,
                 language='en'  # You can make this configurable
             )
+
+            print(f"✓ Transcription complete ({len(raw_transcription)} characters)")
+
+            # Step 2: Format with GPT
+            print("\n" + "-"*70)
+            print("STEP 2/2: Formatting notes with GPT...")
+            print("-"*70)
+
+            # Load template
+            template = self.templates.get_template(template_id)
+
+            # Show cost estimate
+            cost_info = self.note_generator.estimate_cost(raw_transcription, template)
+            print(f"📊 Estimated cost: ${cost_info['estimated_cost_usd']:.4f} (using {cost_info['model']})")
+            print("⏳ Generating formatted notes...")
+
+            # Generate formatted notes
+            formatted_notes = self.note_generator.generate_notes(
+                raw_transcription,
+                template
+            )
+
+            print(f"✓ Formatting complete ({len(formatted_notes)} characters)")
+
+            # Save the formatted notes
+            output_path = Path(output_path)
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+            output_path.write_text(formatted_notes, encoding='utf-8')
 
             print("\n" + "="*70)
             print("✅ SUCCESS!")
             print("="*70)
-            print(f"\n📄 Notes saved to: {saved_path}")
+            print(f"\n📄 Notes saved to: {output_path}")
 
             # Show preview
-            content = saved_path.read_text(encoding='utf-8')
-            preview_length = min(500, len(content))
+            preview_length = min(500, len(formatted_notes))
 
             print(f"\n📖 Preview (first {preview_length} characters):")
             print("-"*70)
-            print(content[:preview_length])
-            if len(content) > preview_length:
+            print(formatted_notes[:preview_length])
+            if len(formatted_notes) > preview_length:
                 print("...")
             print("-"*70)
 
         except Exception as e:
-            print(f"\n❌ Error during transcription: {e}")
+            print(f"\n❌ Error: {e}")
 
     def _show_template_info(self):
         """Display detailed information about all templates."""

@@ -4,16 +4,16 @@ A Python library for transcribing audio recordings into text notes using OpenAI'
 
 ## Features
 
+- **Two-step AI pipeline** - Whisper for transcription + GPT for intelligent formatting
 - **Interactive frontend** (main.py) - Easy-to-use menu interface
 - **YouTube support** - Download and transcribe YouTube videos directly
-- **Backend transcription** using OpenAI's Whisper API
 - **Note templates** - 5 different formats (study guides, meeting minutes, instructions, etc.)
+- **Smart formatting** - GPT structures raw transcripts into organized notes
 - **Simple setup** with `.env` file for API key management
 - **Multiple audio formats** supported (mp3, wav, m4a, flac, ogg, mp4, webm)
-- **Timestamp support** for detailed transcriptions
 - **Fast cloud processing** - no local GPU needed
-- **Save to file** functionality with automatic directory creation
-- **Clean API** focused on core transcription functionality
+- **Cost transparency** - See estimated costs before processing
+- **Clean separation** - Transcription and formatting as separate steps
 
 ## Installation
 
@@ -43,6 +43,29 @@ cp .env.example .env
 ```
 OPENAI_KEY=your-api-key-here
 ```
+
+## How It Works
+
+Note Generator uses a **two-step AI pipeline** for superior results:
+
+### Step 1: Transcription (Whisper API)
+- Converts audio to raw text
+- Handles any language
+- Processes ~$0.006/minute
+
+### Step 2: Formatting (GPT API)
+- Structures the raw transcript
+- Applies your chosen template (study guide, meeting minutes, etc.)
+- Organizes information intelligently
+- Processes ~$0.01-0.05 per transcription (depending on length)
+
+**Why two steps?**
+- ✅ **Whisper** excels at transcription but cannot structure content
+- ✅ **GPT** excels at formatting and organizing text
+- ✅ Better results than single-step approaches
+- ✅ Flexibility to transcribe once, format multiple ways
+
+**Total Cost:** Typically $0.02-0.10 per transcription depending on audio length and template used.
 
 ## Quick Start
 
@@ -93,13 +116,23 @@ python main.py your_recording.mp3
 
 ```python
 from src.transcribe import Transcriber
+from src.note_templates import load_template
+from src.generate import NoteGenerator
 
-# Initialize transcriber (automatically loads API key from .env)
+# Initialize components (automatically load API key from .env)
 transcriber = Transcriber()
+note_generator = NoteGenerator()
 
-# Transcribe an audio file
-text = transcriber.transcribe_to_text('recording.mp3')
-print(text)
+# Step 1: Transcribe audio to raw text
+raw_text = transcriber.transcribe_to_text('recording.mp3')
+
+# Step 2: Format into structured notes using a template
+template = load_template('study_guide')
+formatted_notes = note_generator.generate_notes(raw_text, template)
+
+# Save the formatted notes
+with open('output/notes.txt', 'w') as f:
+    f.write(formatted_notes)
 ```
 
 ## Note Templates
@@ -119,22 +152,23 @@ Transform your transcriptions into organized, formatted notes using templates! C
 ```python
 from src.transcribe import Transcriber
 from src.note_templates import load_template
+from src.generate import NoteGenerator
 
-# Initialize transcriber
+# Initialize components
 transcriber = Transcriber()
+note_generator = NoteGenerator()
 
-# Load a template (study_guide, meeting_minutes, instructions, summary, verbatim_transcript)
-prompt = load_template('study_guide')
+# Step 1: Transcribe audio to raw text with Whisper
+raw_text = transcriber.transcribe_to_text('lecture.mp3', language='en')
 
-# Transcribe with the template
-result = transcriber.transcribe(
-    'lecture.mp3',
-    prompt=prompt,
-    language='en'
-)
+# Step 2: Load a template and format with GPT
+# Options: study_guide, meeting_minutes, instructions, summary, verbatim_transcript
+template = load_template('study_guide')
+formatted_notes = note_generator.generate_notes(raw_text, template)
 
 # Save the formatted notes
-transcriber.save_to_file(result['text'], 'study_notes.txt')
+with open('study_notes.txt', 'w') as f:
+    f.write(formatted_notes)
 ```
 
 ### Interactive Template Selection
@@ -150,20 +184,23 @@ This will show you all available templates and let you choose which format you w
 
 **Study Guide** - Perfect for lectures and educational content:
 ```python
-prompt = load_template('study_guide')
-transcriber.transcribe_and_save('biology_lecture.mp3', 'bio_notes.txt', prompt=prompt)
+template = load_template('study_guide')
+raw_text = transcriber.transcribe_to_text('biology_lecture.mp3')
+notes = note_generator.generate_notes(raw_text, template)
 ```
 
 **Meeting Minutes** - For professional meetings:
 ```python
-prompt = load_template('meeting_minutes')
-transcriber.transcribe_and_save('team_meeting.mp3', 'minutes.txt', prompt=prompt)
+template = load_template('meeting_minutes')
+raw_text = transcriber.transcribe_to_text('team_meeting.mp3')
+notes = note_generator.generate_notes(raw_text, template)
 ```
 
 **Quick Summary** - For fast overviews:
 ```python
-prompt = load_template('summary')
-transcriber.transcribe_and_save('presentation.mp3', 'summary.txt', prompt=prompt)
+template = load_template('summary')
+raw_text = transcriber.transcribe_to_text('presentation.mp3')
+notes = note_generator.generate_notes(raw_text, template)
 ```
 
 See the [Templates README](templates/README.md) for detailed information on each template and how to customize them.
@@ -188,21 +225,26 @@ python main.py
 from src.transcribe import Transcriber
 from src.youtube_downloader import YouTubeDownloader
 from src.note_templates import load_template
+from src.generate import NoteGenerator
 
-# Initialize
+# Initialize components
 transcriber = Transcriber()
 downloader = YouTubeDownloader()
+note_generator = NoteGenerator()
 
 # Download audio from YouTube
 audio_file = downloader.download_audio('https://youtube.com/watch?v=...')
 
-# Transcribe with a template
-prompt = load_template('study_guide')
-transcriber.transcribe_and_save(
-    audio_file,
-    'output/youtube_notes.txt',
-    prompt=prompt
-)
+# Step 1: Transcribe audio to raw text
+raw_text = transcriber.transcribe_to_text(audio_file)
+
+# Step 2: Format with template
+template = load_template('study_guide')
+formatted_notes = note_generator.generate_notes(raw_text, template)
+
+# Save the formatted notes
+with open('output/youtube_notes.txt', 'w') as f:
+    f.write(formatted_notes)
 
 # Optionally delete the downloaded audio
 audio_file.unlink()
@@ -227,6 +269,8 @@ audio_file.unlink()
 
 ### Transcriber Class
 
+Handles audio transcription using OpenAI's Whisper API.
+
 #### `__init__(api_key=None, model='whisper-1')`
 
 Initialize the transcriber.
@@ -243,11 +287,11 @@ Transcribe audio and return plain text.
 - `language` (optional): Language code (e.g., 'en', 'es', 'fr')
 - `**kwargs`: Additional options (prompt, temperature)
 
-**Returns:** `str` - Transcribed text
+**Returns:** `str` - Raw transcribed text
 
 **Example:**
 ```python
-text = transcriber.transcribe_to_text('meeting.mp3', language='en')
+raw_text = transcriber.transcribe_to_text('meeting.mp3', language='en')
 ```
 
 #### `transcribe_with_timestamps(audio_input, language=None, **kwargs)`
@@ -267,45 +311,112 @@ for segment in segments:
     print(f"[{segment['start']:.2f}s] {segment['text']}")
 ```
 
-#### `transcribe(audio_input, language=None, prompt=None, response_format='json', temperature=0.0)`
+### NoteGenerator Class
 
-Full transcription method with all options.
+Formats raw transcriptions into structured notes using OpenAI's GPT API.
+
+#### `__init__(api_key=None, model='gpt-3.5-turbo')`
+
+Initialize the note generator.
+
+- `api_key` (optional): OpenAI API key. If None, loads from `OPENAI_KEY` in `.env` file
+- `model`: GPT model to use (default: 'gpt-3.5-turbo', can use 'gpt-4' for higher quality)
+
+#### `generate_notes(transcription, template, custom_instructions="")`
+
+Generate formatted notes from raw transcription using a template.
 
 **Args:**
-- `audio_input`: Path to audio file
-- `language` (optional): Language code
-- `prompt` (optional): Text to guide transcription style
-- `response_format`: 'json', 'text', 'srt', 'verbose_json', or 'vtt'
-- `temperature`: Sampling temperature (0.0-1.0)
+- `transcription`: Raw text from Whisper transcription
+- `template`: Template string with formatting instructions (use `load_template()` to load)
+- `custom_instructions` (optional): Additional instructions to append to the template
 
-**Returns:** `dict[str, Any]` - Transcription result
+**Returns:** `str` - Formatted notes
 
 **Example:**
 ```python
-result = transcriber.transcribe(
-    'interview.mp3',
-    language='en',
-    prompt='Technical discussion about AI and machine learning'
-)
-print(result['text'])
+from src.note_templates import load_template
+
+template = load_template('study_guide')
+formatted_notes = note_generator.generate_notes(raw_text, template)
+```
+
+#### `estimate_cost(transcription, template)`
+
+Estimate the cost of generating notes before making the API call.
+
+**Args:**
+- `transcription`: Raw text from Whisper transcription
+- `template`: Template string
+
+**Returns:** `dict` with keys:
+- `input_tokens`: Estimated input token count
+- `output_tokens`: Estimated output token count
+- `estimated_cost_usd`: Estimated cost in USD
+- `model`: Model being used
+
+**Example:**
+```python
+cost_info = note_generator.estimate_cost(raw_text, template)
+print(f"Estimated cost: ${cost_info['estimated_cost_usd']:.4f}")
+```
+
+#### `generate_notes_streaming(transcription, template, custom_instructions="")`
+
+Generate notes with streaming output for real-time display.
+
+**Args:**
+- `transcription`: Raw text from Whisper transcription
+- `template`: Template string with formatting instructions
+- `custom_instructions` (optional): Additional instructions
+
+**Yields:** `str` - Chunks of formatted notes as they're generated
+
+**Example:**
+```python
+for chunk in note_generator.generate_notes_streaming(raw_text, template):
+    print(chunk, end='', flush=True)
 ```
 
 ## Usage Examples
 
-### Example 1: Simple Transcription
+### Example 1: Simple Transcription (Raw Text Only)
 
 ```python
-from transcribe import Transcriber
+from src.transcribe import Transcriber
 
 transcriber = Transcriber()
-text = transcriber.transcribe_to_text('recording.mp3')
-print(text)
+raw_text = transcriber.transcribe_to_text('recording.mp3')
+print(raw_text)  # Plain transcription without formatting
 ```
 
-### Example 2: Transcription with Timestamps
+### Example 2: Formatted Notes with Template
 
 ```python
-from transcribe import Transcriber
+from src.transcribe import Transcriber
+from src.generate import NoteGenerator
+from src.note_templates import load_template
+
+# Initialize components
+transcriber = Transcriber()
+note_generator = NoteGenerator()
+
+# Step 1: Transcribe
+raw_text = transcriber.transcribe_to_text('lecture.mp3', language='en')
+
+# Step 2: Format with template
+template = load_template('study_guide')
+formatted_notes = note_generator.generate_notes(raw_text, template)
+
+# Save formatted notes
+with open('formatted_notes.txt', 'w') as f:
+    f.write(formatted_notes)
+```
+
+### Example 3: Transcription with Timestamps
+
+```python
+from src.transcribe import Transcriber
 
 transcriber = Transcriber()
 segments = transcriber.transcribe_with_timestamps('lecture.mp3')
@@ -315,40 +426,31 @@ for i, segment in enumerate(segments, 1):
     print(f"    {segment['text']}\n")
 ```
 
-### Example 3: Transcription with Context Prompt
+### Example 4: Cost Estimation Before Processing
 
 ```python
-from transcribe import Transcriber
+from src.transcribe import Transcriber
+from src.generate import NoteGenerator
+from src.note_templates import load_template
 
 transcriber = Transcriber()
+note_generator = NoteGenerator()
 
-# Provide context to improve accuracy for technical terms
-prompt = "Discussion about Python programming, machine learning, and neural networks"
+# Transcribe first
+raw_text = transcriber.transcribe_to_text('meeting.mp3')
 
-result = transcriber.transcribe(
-    'tech_talk.mp3',
-    language='en',
-    prompt=prompt
-)
+# Estimate cost before formatting
+template = load_template('meeting_minutes')
+cost_info = note_generator.estimate_cost(raw_text, template)
 
-print(result['text'])
-```
+print(f"Estimated cost: ${cost_info['estimated_cost_usd']:.4f}")
+print(f"Input tokens: {cost_info['input_tokens']}")
+print(f"Output tokens: {cost_info['output_tokens']}")
 
-### Example 4: Save Transcription to File
-
-```python
-from transcribe import Transcriber
-from pathlib import Path
-
-transcriber = Transcriber()
-
-audio_file = 'meeting.mp3'
-text = transcriber.transcribe_to_text(audio_file)
-
-# Save to text file
-output_file = Path(audio_file).with_suffix('.txt')
-output_file.write_text(text, encoding='utf-8')
-print(f"Saved to {output_file}")
+# Proceed with formatting if acceptable
+if cost_info['estimated_cost_usd'] < 0.10:  # Less than 10 cents
+    formatted_notes = note_generator.generate_notes(raw_text, template)
+    print(formatted_notes)
 ```
 
 ## Supported Audio Formats
@@ -423,9 +525,10 @@ pip install openai python-dotenv
 
 ```
 notegenerator/
-├── main.py                     # Interactive frontend (START HERE!)
 ├── src/
-│   ├── transcribe.py          # Main Transcriber class
+│   ├── main.py                # Interactive frontend (START HERE!)
+│   ├── transcribe.py          # Transcriber class (Whisper API)
+│   ├── generate.py            # NoteGenerator class (GPT API)
 │   ├── note_templates.py      # Template management
 │   └── youtube_downloader.py  # YouTube audio downloader
 ├── templates/                  # Note formatting templates
