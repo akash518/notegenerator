@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv
+
+# Environment variables
+.env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Audio files (you may want to keep these out of version control)
+*.mp3
+*.wav
+*.m4a
+*.flac
+*.ogg
+*.mp4
+*.webm
+downloads/
+
+# Transcription outputs
+transcription*.txt
+notes/
+
+# Model cache (Whisper downloads models here)
+~/.cache/whisper/
+
+# OS
+.DS_Store
+Thumbs.db
