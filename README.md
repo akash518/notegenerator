@@ -1,4 +1,4 @@
-# Note Generator - Whisper AI Transcription
+# Note Generator
 
 A Python library for transcribing audio recordings into text notes using OpenAI's API.
 
