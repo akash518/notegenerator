@@ -55,17 +55,25 @@ class YouTubeDownloader:
                 "Install it with: pip install yt-dlp"
             ) from e
 
-        # Configure yt-dlp options
+        # Configure yt-dlp options optimized for Whisper API compatibility
         ydl_opts = {
             'format': 'bestaudio/best',
             'postprocessors': [{
                 'key': 'FFmpegExtractAudio',
                 'preferredcodec': 'mp3',
                 'preferredquality': '192',
+            }, {
+                'key': 'FFmpegMetadata',
             }],
+            'postprocessor_args': [
+                '-ar', '16000',  # Whisper uses 16kHz sample rate
+                '-ac', '1',       # Convert to mono
+                '-b:a', '128k',   # Constant bitrate for compatibility
+            ],
             'outtmpl': str(self.output_dir / '%(title)s.%(ext)s'),
             'quiet': False,
             'no_warnings': False,
+            'keepvideo': False,
         }
 
         # If custom filename provided, use it
@@ -106,7 +114,15 @@ class YouTubeDownloader:
                         f"Download completed but could not find the audio file in {self.output_dir}"
                     )
 
+                # Validate the downloaded file
+                if not self._validate_audio_file(audio_file):
+                    raise ValueError(
+                        f"Downloaded audio file appears to be invalid or corrupted. "
+                        f"File: {audio_file}, Size: {audio_file.stat().st_size} bytes"
+                    )
+
                 print(f"✓ Audio downloaded: {audio_file}")
+                print(f"  File size: {audio_file.stat().st_size / (1024*1024):.2f} MB")
                 return audio_file
 
         except Exception as e:
@@ -140,6 +156,45 @@ class YouTubeDownloader:
             return max(mp3_files, key=lambda p: p.stat().st_mtime)
 
         return None
+
+    @staticmethod
+    def _validate_audio_file(audio_path: Path) -> bool:
+        """
+        Validate that the downloaded audio file is usable.
+
+        Args:
+            audio_path: Path to the audio file
+
+        Returns:
+            True if file is valid, False otherwise
+        """
+        # Check file exists
+        if not audio_path.exists():
+            return False
+
+        # Check file size (should be at least 1KB)
+        file_size = audio_path.stat().st_size
+        if file_size < 1024:  # Less than 1KB is suspicious
+            return False
+
+        # Check if file has .mp3 extension
+        if audio_path.suffix.lower() != '.mp3':
+            return False
+
+        # Basic MP3 header check (MP3 files start with ID3 or 0xFF 0xFB)
+        try:
+            with open(audio_path, 'rb') as f:
+                header = f.read(3)
+                # Check for ID3 tag or MP3 sync word
+                if header.startswith(b'ID3') or header[:2] in [b'\xff\xfb', b'\xff\xf3', b'\xff\xf2']:
+                    return True
+        except Exception:
+            pass
+
+        # If we can't verify the header, assume it's okay if size is reasonable
+        return file_size > 10000  # At least 10KB
+
+
 
     @staticmethod
     def _format_duration(seconds: int) -> str:
