@@ -5,7 +5,7 @@ This script demonstrates how to use the Transcriber for transcribing
 audio recordings to text notes.
 """
 
-from transcribe import Transcriber
+from src.transcribe import Transcriber
 import sys
 from pathlib import Path
 
