@@ -1,323 +1,283 @@
 # Note Generator - Whisper AI Transcription
 
-A Python library for transcribing audio recordings into text notes using OpenAI's Whisper AI model.
-
-**Two implementations available:**
-- **Local**: Run Whisper models locally on your machine (free, private, offline)
-- **API**: Use OpenAI's cloud API (fast, requires API key, pay-per-use)
+A Python library for transcribing audio recordings into text notes using OpenAI's Whisper AI API.
 
 ## Features
 
-### Local Implementation (`whisper_transcriber.py`)
-- Support for multiple Whisper model sizes (tiny, base, small, medium, large)
-- Automatic GPU/CPU detection
-- Runs completely offline after initial model download
-- Free, unlimited usage
-- Privacy - audio never leaves your machine
-
-### API Implementation (`whisper_api_transcriber.py`)
-- Fast cloud-based transcription
-- No local GPU/CPU resources needed
-- Additional subtitle formats (SRT, VTT)
-- Translation to English from any language
-- Requires OpenAI API key
-
-### Common Features
-- Multiple audio format support (mp3, wav, m4a, flac, ogg, mp4, webm)
-- Timestamp extraction for detailed transcriptions
-- Easy-to-use API for common transcription tasks
-- Save transcriptions directly to text files
+- **Backend transcription** using OpenAI's Whisper API
+- **Simple setup** with `.env` file for API key management
+- **Multiple audio formats** supported (mp3, wav, m4a, flac, ogg, mp4, webm)
+- **Timestamp support** for detailed transcriptions
+- **Fast cloud processing** - no local GPU needed
+- **Clean API** focused on core transcription functionality
 
 ## Installation
 
-### For Local Implementation
-
-1. Install system dependencies (FFmpeg is required):
+### 1. Install Dependencies
 
 ```bash
-# Ubuntu/Debian
-sudo apt update && sudo apt install ffmpeg
-
-# macOS
-brew install ffmpeg
-
-# Windows (using chocolatey)
-choco install ffmpeg
-```
-
-2. Install Python dependencies:
-
-```bash
-# Install only local dependencies
-pip install openai-whisper torch numpy ffmpeg-python
-```
-
-### For API Implementation
-
-```bash
-# Install only API dependencies
-pip install openai
-```
-
-### For Both Implementations
-
-```bash
-# Install all dependencies
 pip install -r requirements.txt
+```
+
+This installs:
+- `openai` - OpenAI API client
+- `python-dotenv` - Environment variable management
+
+### 2. Set Up API Key
+
+1. Get your OpenAI API key from [https://platform.openai.com/api-keys](https://platform.openai.com/api-keys)
+
+2. Create a `.env` file in the project root:
+
+```bash
+cp .env.example .env
+```
+
+3. Edit `.env` and add your API key:
+
+```
+OPENAI_KEY=your-api-key-here
 ```
 
 ## Quick Start
 
-### Option 1: Local Implementation
+### Basic Usage
 
 ```python
-from whisper_transcriber import WhisperTranscriber
+from transcribe import Transcriber
 
-# Create a transcriber instance
-transcriber = WhisperTranscriber(model_size='base')
+# Initialize transcriber (automatically loads API key from .env)
+transcriber = Transcriber()
 
 # Transcribe an audio file
 text = transcriber.transcribe_to_text('recording.mp3')
 print(text)
 ```
 
-### Option 2: API Implementation
+### Command Line Usage
 
+```bash
+# Transcribe a file and save to text
+python example_transcribe.py your_recording.mp3
+```
+
+## API Reference
+
+### Transcriber Class
+
+#### `__init__(api_key=None, model='whisper-1')`
+
+Initialize the transcriber.
+
+- `api_key` (optional): OpenAI API key. If None, loads from `OPENAI_KEY` in `.env` file
+- `model`: Whisper model to use (default: 'whisper-1')
+
+#### `transcribe_to_text(audio_input, language=None, **kwargs)`
+
+Transcribe audio and return plain text.
+
+**Args:**
+- `audio_input`: Path to audio file
+- `language` (optional): Language code (e.g., 'en', 'es', 'fr')
+- `**kwargs`: Additional options (prompt, temperature)
+
+**Returns:** `str` - Transcribed text
+
+**Example:**
 ```python
-from whisper_api_transcriber import WhisperAPITranscriber
+text = transcriber.transcribe_to_text('meeting.mp3', language='en')
+```
 
-# Set your API key (or use OPENAI_API_KEY environment variable)
-transcriber = WhisperAPITranscriber(api_key='your-api-key-here')
+#### `transcribe_with_timestamps(audio_input, language=None, **kwargs)`
 
-# Transcribe an audio file
-text = transcriber.transcribe_to_text('recording.mp3')
-print(text)
+Transcribe audio with timestamp information for each segment.
+
+**Args:**
+- `audio_input`: Path to audio file
+- `language` (optional): Language code
+
+**Returns:** `list[dict]` - List of segments with 'start', 'end', and 'text'
+
+**Example:**
+```python
+segments = transcriber.transcribe_with_timestamps('lecture.mp3')
+for segment in segments:
+    print(f"[{segment['start']:.2f}s] {segment['text']}")
+```
+
+#### `transcribe(audio_input, language=None, prompt=None, response_format='json', temperature=0.0)`
+
+Full transcription method with all options.
+
+**Args:**
+- `audio_input`: Path to audio file
+- `language` (optional): Language code
+- `prompt` (optional): Text to guide transcription style
+- `response_format`: 'json', 'text', 'srt', 'verbose_json', or 'vtt'
+- `temperature`: Sampling temperature (0.0-1.0)
+
+**Returns:** `dict[str, Any]` - Transcription result
+
+**Example:**
+```python
+result = transcriber.transcribe(
+    'interview.mp3',
+    language='en',
+    prompt='Technical discussion about AI and machine learning'
+)
+print(result['text'])
 ```
 
 ## Usage Examples
 
-### Local Implementation - Advanced
+### Example 1: Simple Transcription
 
 ```python
-from whisper_transcriber import WhisperTranscriber
+from transcribe import Transcriber
 
-# Initialize with a specific model and device
-transcriber = WhisperTranscriber(model_size='medium', device='cuda')
-
-# Get full transcription with metadata
-result = transcriber.transcribe('recording.mp3', language='en')
-print(result['text'])
-print(f"Detected language: {result['language']}")
-
-# Get transcription with timestamps
-segments = transcriber.transcribe_with_timestamps('recording.mp3')
-for segment in segments:
-    print(f"[{segment['start']:.2f}s - {segment['end']:.2f}s] {segment['text']}")
-
-# Save transcription to file
-transcriber.save_transcription(
-    'recording.mp3',
-    'transcription.txt',
-    include_timestamps=True
-)
-```
-
-### API Implementation - Advanced
-
-```python
-from whisper_api_transcriber import WhisperAPITranscriber
-import os
-
-# Use environment variable for API key
-os.environ['OPENAI_API_KEY'] = 'your-api-key-here'
-transcriber = WhisperAPITranscriber()
-
-# Simple transcription
+transcriber = Transcriber()
 text = transcriber.transcribe_to_text('recording.mp3')
 print(text)
+```
 
-# Get transcription with timestamps
-segments = transcriber.transcribe_with_timestamps('recording.mp3')
-for segment in segments:
-    print(f"[{segment['start']:.2f}s - {segment['end']:.2f}s] {segment['text']}")
+### Example 2: Transcription with Timestamps
 
-# Save as SRT subtitle file
-transcriber.save_transcription(
-    'recording.mp3',
-    'subtitles.srt',
-    format='srt'
+```python
+from transcribe import Transcriber
+
+transcriber = Transcriber()
+segments = transcriber.transcribe_with_timestamps('lecture.mp3')
+
+for i, segment in enumerate(segments, 1):
+    print(f"[{i}] {segment['start']:.2f}s - {segment['end']:.2f}s")
+    print(f"    {segment['text']}\n")
+```
+
+### Example 3: Transcription with Context Prompt
+
+```python
+from transcribe import Transcriber
+
+transcriber = Transcriber()
+
+# Provide context to improve accuracy for technical terms
+prompt = "Discussion about Python programming, machine learning, and neural networks"
+
+result = transcriber.transcribe(
+    'tech_talk.mp3',
+    language='en',
+    prompt=prompt
 )
 
-# Translate non-English audio to English
-result = transcriber.translate('spanish_audio.mp3')
 print(result['text'])
 ```
 
-## Model Sizes
+### Example 4: Save Transcription to File
 
-Choose a model size based on your needs:
+```python
+from transcribe import Transcriber
+from pathlib import Path
 
-| Model  | Parameters | Relative Speed | Relative Accuracy |
-|--------|------------|----------------|-------------------|
-| tiny   | 39 M       | Fastest        | Good              |
-| base   | 74 M       | Fast           | Better            |
-| small  | 244 M      | Moderate       | Good              |
-| medium | 769 M      | Slower         | Very Good         |
-| large  | 1550 M     | Slowest        | Best              |
+transcriber = Transcriber()
 
-**Recommendation**: Start with `base` for a good balance of speed and accuracy.
+audio_file = 'meeting.mp3'
+text = transcriber.transcribe_to_text(audio_file)
 
-## Which Implementation Should I Use?
-
-| Feature | Local | API |
-|---------|-------|-----|
-| **Cost** | Free | ~$0.006/minute |
-| **Speed** | Slower (depends on hardware) | Very fast |
-| **Privacy** | Complete (offline) | Audio sent to OpenAI |
-| **Internet** | Only for initial download | Required |
-| **Hardware** | GPU recommended | None needed |
-| **API Key** | Not needed | Required |
-| **Max File Size** | No limit | 25 MB |
-| **Best For** | Privacy, bulk processing, offline use | Quick tasks, no GPU available |
-
-## API Reference
-
-### WhisperTranscriber (Local)
-
-#### `__init__(model_size='base', device=None)`
-
-Initialize the transcriber.
-
-- `model_size`: Model size to use ('tiny', 'base', 'small', 'medium', 'large')
-- `device`: Device to run on ('cuda' or 'cpu'). Auto-detected if None.
-
-#### `transcribe(audio_input, language=None, task='transcribe', **kwargs)`
-
-Transcribe an audio file and return full results.
-
-- `audio_input`: Path to audio file
-- `language`: Language code (e.g., 'en', 'es'). Auto-detected if None.
-- `task`: Either 'transcribe' or 'translate' (to English)
-- Returns: Dictionary with 'text', 'segments', and 'language'
-
-#### `transcribe_to_text(audio_input, language=None, **kwargs)`
-
-Transcribe and return only the text string.
-
-#### `transcribe_with_timestamps(audio_input, language=None, **kwargs)`
-
-Transcribe and return list of segments with timestamps.
-
-#### `save_transcription(audio_input, output_path, language=None, include_timestamps=False, **kwargs)`
-
-Transcribe and save to a file.
-
----
-
-### WhisperAPITranscriber (Cloud API)
-
-#### `__init__(api_key=None, model='whisper-1')`
-
-Initialize the API transcriber.
-
-- `api_key`: OpenAI API key (or use OPENAI_API_KEY env variable)
-- `model`: Model to use (currently only 'whisper-1' available)
-
-#### `transcribe(audio_input, language=None, prompt=None, response_format='json', temperature=0.0)`
-
-Transcribe an audio file using the API.
-
-- `audio_input`: Path to audio file
-- `language`: Language code (e.g., 'en', 'es')
-- `prompt`: Optional text to guide transcription style
-- `response_format`: 'json', 'text', 'srt', 'verbose_json', or 'vtt'
-- `temperature`: Sampling temperature (0.0-1.0)
-
-#### `transcribe_to_text(audio_input, language=None, **kwargs)`
-
-Transcribe and return only the text string.
-
-#### `transcribe_with_timestamps(audio_input, language=None, **kwargs)`
-
-Transcribe and return list of segments with timestamps.
-
-#### `transcribe_to_srt(audio_input, language=None, **kwargs)`
-
-Transcribe and return SRT subtitle format.
-
-#### `transcribe_to_vtt(audio_input, language=None, **kwargs)`
-
-Transcribe and return WebVTT subtitle format.
-
-#### `save_transcription(audio_input, output_path, language=None, include_timestamps=False, format='text', **kwargs)`
-
-Transcribe and save to a file.
-
-#### `translate(audio_input, prompt=None, response_format='json', temperature=0.0)`
-
-Translate audio to English (works with any language).
+# Save to text file
+output_file = Path(audio_file).with_suffix('.txt')
+output_file.write_text(text, encoding='utf-8')
+print(f"Saved to {output_file}")
+```
 
 ## Supported Audio Formats
 
 - MP3 (.mp3)
+- MP4 (.mp4, .m4a)
+- MPEG (.mpeg, .mpga)
 - WAV (.wav)
-- M4A (.m4a)
-- FLAC (.flac)
-- OGG (.ogg)
-- MP4 (.mp4)
 - WebM (.webm)
+- FLAC (.flac)
 
-## Example Scripts
+**Max file size:** 25 MB (OpenAI API limit)
 
-- `example.py` - Complete examples for local implementation
-- `example_api.py` - Complete examples for API implementation
+## Configuration
 
-## Requirements
+### Environment Variables
 
-- Python 3.8+
-- FFmpeg (system dependency)
-- PyTorch
-- OpenAI Whisper
+The transcriber uses environment variables from a `.env` file:
 
-## Getting an OpenAI API Key
+```bash
+# .env
+OPENAI_KEY=your-api-key-here
+```
 
-To use the API implementation:
+You can also pass the API key directly:
 
-1. Go to [OpenAI's website](https://platform.openai.com/signup)
-2. Sign up or log in
-3. Navigate to API Keys section
-4. Create a new API key
-5. Set it as an environment variable:
-   ```bash
-   export OPENAI_API_KEY='your-api-key-here'
-   ```
+```python
+transcriber = Transcriber(api_key='your-api-key-here')
+```
+
+## Cost
+
+OpenAI Whisper API pricing: **~$0.006 per minute** of audio
+
+Check your usage at: [https://platform.openai.com/usage](https://platform.openai.com/usage)
 
 ## Troubleshooting
 
-### Local Implementation
+### ValueError: OpenAI API key not provided
 
-**CUDA Out of Memory**
-- Use a smaller model size
-- Use CPU instead: `WhisperTranscriber(model_size='base', device='cpu')`
+**Solution:** Make sure you have:
+1. Created a `.env` file in the project root
+2. Added `OPENAI_KEY=your-actual-api-key` to the file
+3. Verified the API key is correct
 
-**FFmpeg Not Found**
-- Make sure FFmpeg is installed and available in your system PATH
+### FileNotFoundError: Audio file not found
 
-### API Implementation
+**Solution:** Check that:
+1. The file path is correct
+2. The file exists
+3. You have read permissions
 
-**Authentication Error**
-- Verify your API key is correct
-- Check that OPENAI_API_KEY environment variable is set
+### ValueError: Unsupported audio format
 
-**File Too Large**
-- API has a 25 MB file size limit
-- Consider using local implementation for large files
-- Or compress/split your audio file
+**Solution:** Convert your audio to a supported format (mp3, wav, m4a, etc.)
 
-**Rate Limiting**
-- OpenAI API has rate limits
-- Add delays between requests if processing multiple files
+### ValueError: File size exceeds maximum
+
+**Solution:**
+- Compress the audio file
+- Split into smaller chunks
+- Use a lower bitrate
+
+### ImportError: openai package not installed
+
+**Solution:**
+```bash
+pip install openai python-dotenv
+```
+
+## Project Structure
+
+```
+notegenerator/
+├── transcribe.py           # Main Transcriber class
+├── example_transcribe.py   # Usage examples
+├── .env.example           # Example environment file
+├── .env                   # Your API key (git-ignored)
+├── requirements.txt       # Python dependencies
+└── README.md             # This file
+```
+
+## Additional Implementations
+
+This project also includes optional local Whisper implementations:
+
+- `whisper_transcriber.py` - Local CPU/GPU transcription (free, offline)
+- `whisper_api_transcriber.py` - Full-featured API client with SRT/VTT support
+
+These are provided for reference but are not the primary implementation.
 
 ## License
 
-This project uses OpenAI's Whisper model. Please refer to the [Whisper repository](https://github.com/openai/whisper) for license information.
+This project uses OpenAI's Whisper API. Refer to OpenAI's terms of service for API usage.
