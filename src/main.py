@@ -11,6 +11,7 @@ from transcribe import Transcriber
 from note_templates import NoteTemplates
 from youtube_downloader import YouTubeDownloader
 from generate import NoteGenerator
+from config import NOTES_DIR
 
 
 class NoteGeneratorApp:
@@ -239,9 +240,9 @@ class NoteGeneratorApp:
             # Ensure .txt extension
             if not custom.endswith('.txt'):
                 custom += '.txt'
-            output_path = Path("output") / custom
+            output_path = Path(NOTES_DIR) / custom
         else:
-            output_path = Path("output") / default_name
+            output_path = Path(NOTES_DIR) / default_name
 
         return output_path
 

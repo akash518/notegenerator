@@ -91,9 +91,9 @@ class NoteGenerator:
         # Build the user message
         user_message = f"""Please format the following transcription according to the instructions provided.
 
-TRANSCRIPTION:
-{transcription}
-"""
+        TRANSCRIPTION:
+        {transcription}
+        """
 
         if custom_instructions:
             user_message += f"\n\nADDITIONAL INSTRUCTIONS:\n{custom_instructions}"
@@ -106,8 +106,8 @@ TRANSCRIPTION:
                     {"role": "system", "content": system_message},
                     {"role": "user", "content": user_message}
                 ],
-                temperature=0.3,  # Lower temperature for more consistent formatting
-                max_tokens=4000,   # Adjust based on expected note length
+                temperature=1,
+                max_completion_tokens=4000,   # Adjust based on expected note length
             )
 
             # Extract the formatted notes
@@ -149,9 +149,9 @@ TRANSCRIPTION:
 
         user_message = f"""Please format the following transcription according to the instructions provided.
 
-TRANSCRIPTION:
-{transcription}
-"""
+        TRANSCRIPTION:
+        {transcription}
+        """
 
         if custom_instructions:
             user_message += f"\n\nADDITIONAL INSTRUCTIONS:\n{custom_instructions}"
@@ -164,8 +164,8 @@ TRANSCRIPTION:
                     {"role": "system", "content": system_message},
                     {"role": "user", "content": user_message}
                 ],
-                temperature=0.3,
-                max_tokens=4000,
+                temperature=1,
+                max_completion_tokens=4000,
                 stream=True
             )
 

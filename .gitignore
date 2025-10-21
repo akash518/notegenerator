@@ -29,7 +29,7 @@ downloads/
 
 # Transcription outputs
 transcription*.txt
-output/
+notes/
 
 # Model cache (Whisper downloads models here)
 ~/.cache/whisper/

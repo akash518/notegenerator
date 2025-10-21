@@ -8,16 +8,17 @@ for transcription purposes.
 import os
 from pathlib import Path
 from typing import Optional
+from config import DOWNLOADS_DIR
 
 
 class YouTubeDownloader:
     """
     Downloads audio from YouTube videos for transcription.
 
-    Uses yt-dlp to download audio in a format compatible with Whisper API.
+    Uses yt-dlp to download audio in a format compatible with OpenAI.
     """
 
-    def __init__(self, output_dir: str | Path = "downloads"):
+    def __init__(self, output_dir: str | Path = DOWNLOADS_DIR):
         """
         Initialize the YouTube downloader.
 
@@ -259,7 +260,7 @@ class YouTubeDownloader:
 
 
 # Convenience function
-def download_youtube_audio(youtube_url: str, output_dir: str = "downloads") -> Path:
+def download_youtube_audio(youtube_url: str, output_dir: str = DOWNLOADS_DIR) -> Path:
     """
     Quick helper to download YouTube audio.
 

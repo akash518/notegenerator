@@ -1,53 +1,51 @@
 """
 Audio Transcription Backend for Note Generation
 
-This module provides a Transcriber class that handles audio transcription
-using OpenAI's Whisper API.
+Transcribes audio recordings using OpenAI's Whisper or GPT-4o transcription models.
 """
 
 import os
 from typing import Any
 from pathlib import Path
-from dotenv import load_dotenv
-
-# Load environment variables from .env file
-load_dotenv()
+from config import OPENAI_KEY
 
 class Transcriber:
     """
-    Transcribes audio recordings using OpenAI's Whisper API.
+    Transcribes audio recordings using OpenAI's API.
 
     This class handles the core transcription functionality, sending audio files
     to OpenAI's cloud API and returning the transcribed text.
 
     Attributes:
-        model (str): The Whisper model to use
+        model (str): The OpenAI model to use
         client: OpenAI client instance
     """
 
     SUPPORTED_FORMATS = [
         '.mp3', '.mp4', '.mpeg', '.mpga', '.m4a', '.wav', '.webm', '.flac'
     ]
-    MAX_FILE_SIZE_MB = 25  # OpenAI API limit
+    MAX_FILE_SIZE_MB = 50  # OpenAI API limit
 
-    def __init__(self, model: str = "whisper-1"):
+    def __init__(self, model: str = "gpt-4o-transcribe"):
         """
         Initialize the transcriber.
 
         Args:
-            model (str): Model to use. Currently only 'whisper-1' is available.
+            model (str): Model to use.
+            Options:
+                - whisper-1
+                - gpt-4o-transcribe
 
         Raises:
             ValueError: If API key is not provided and not in environment
             ImportError: If openai package is not installed
         """
         # Get API key from parameter or environment variable (OPENAI_KEY)
-        self.api_key = os.getenv('OPENAI_KEY')
+        self.api_key = OPENAI_KEY
 
         if not self.api_key:
             raise ValueError(
-                "OpenAI API key not provided. Either pass it as 'api_key' parameter "
-                "or set the OPENAI_KEY environment variable in your .env file."
+                "OpenAI API key not provided."
             )
 
         self.model = model
@@ -81,7 +79,7 @@ class Transcriber:
         temperature: float = 0.0,
     ) -> dict[str, Any]:
         """
-        Transcribe an audio recording using OpenAI's Whisper API.
+        Transcribe an audio recording using OpenAI's API.
 
         Args:
             audio_input (str | Path): Path to the audio file to transcribe
