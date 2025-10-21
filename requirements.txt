@@ -1,6 +1,7 @@
 # Core dependencies for API-based transcription
 openai>=1.0.0
 python-dotenv>=1.0.0
+yt-dlp>=2023.10.13
 
 # Optional: For local Whisper implementation (whisper_transcriber.py)
 # Uncomment if you want to use the local implementation

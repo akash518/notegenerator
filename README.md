@@ -4,8 +4,10 @@ A Python library for transcribing audio recordings into text notes using OpenAI'
 
 ## Features
 
+- **Interactive frontend** (main.py) - Easy-to-use menu interface
+- **YouTube support** - Download and transcribe YouTube videos directly
 - **Backend transcription** using OpenAI's Whisper API
-- **Note templates** for different formats (study guides, meeting minutes, instructions, etc.)
+- **Note templates** - 5 different formats (study guides, meeting minutes, instructions, etc.)
 - **Simple setup** with `.env` file for API key management
 - **Multiple audio formats** supported (mp3, wav, m4a, flac, ogg, mp4, webm)
 - **Timestamp support** for detailed transcriptions
@@ -24,6 +26,7 @@ pip install -r requirements.txt
 This installs:
 - `openai` - OpenAI API client
 - `python-dotenv` - Environment variable management
+- `yt-dlp` - YouTube video/audio downloader
 
 ### 2. Set Up API Key
 
@@ -43,10 +46,53 @@ OPENAI_KEY=your-api-key-here
 
 ## Quick Start
 
-### Basic Usage
+### 🚀 Interactive Frontend (Recommended)
+
+The easiest way to use Note Generator:
+
+```bash
+python main.py
+```
+
+**This interactive menu lets you:**
+1. ✓ Choose between **audio file** or **YouTube link**
+2. ✓ Select your preferred **note template** (study guide, meeting minutes, etc.)
+3. ✓ Specify **output filename**
+4. ✓ Get **formatted notes** automatically!
+
+**Example Session:**
+```
+📝 WELCOME TO NOTE GENERATOR
+==========================================
+MAIN MENU
+1. Transcribe from Audio File
+2. Transcribe from YouTube Link  ← New!
+3. View Template Information
+4. Exit
+
+Enter your choice (1-4): 2
+
+Enter the YouTube URL: https://youtube.com/watch?v=example
+
+SELECT NOTE TEMPLATE
+1. Study Guide - Comprehensive notes...
+2. Meeting Minutes - Professional documentation...
+...
+
+✅ SUCCESS! Notes saved to: output/video_title_study_guide_notes.txt
+```
+
+### Quick Mode (Command Line)
+
+```bash
+# Transcribe a file with template selection
+python main.py your_recording.mp3
+```
+
+### Programmatic Usage
 
 ```python
-from transcribe import Transcriber
+from src.transcribe import Transcriber
 
 # Initialize transcriber (automatically loads API key from .env)
 transcriber = Transcriber()
@@ -54,13 +100,6 @@ transcriber = Transcriber()
 # Transcribe an audio file
 text = transcriber.transcribe_to_text('recording.mp3')
 print(text)
-```
-
-### Command Line Usage
-
-```bash
-# Transcribe a file and save to text
-python example_transcribe.py your_recording.mp3
 ```
 
 ## Note Templates
@@ -128,6 +167,61 @@ transcriber.transcribe_and_save('presentation.mp3', 'summary.txt', prompt=prompt
 ```
 
 See the [Templates README](templates/README.md) for detailed information on each template and how to customize them.
+
+## YouTube Transcription
+
+Transcribe YouTube videos directly without manually downloading them!
+
+### Using the Frontend
+
+```bash
+python main.py
+# Select option 2: Transcribe from YouTube Link
+# Enter the YouTube URL
+# Choose your note template
+# Done!
+```
+
+### Programmatic Usage
+
+```python
+from src.transcribe import Transcriber
+from src.youtube_downloader import YouTubeDownloader
+from src.note_templates import load_template
+
+# Initialize
+transcriber = Transcriber()
+downloader = YouTubeDownloader()
+
+# Download audio from YouTube
+audio_file = downloader.download_audio('https://youtube.com/watch?v=...')
+
+# Transcribe with a template
+prompt = load_template('study_guide')
+transcriber.transcribe_and_save(
+    audio_file,
+    'output/youtube_notes.txt',
+    prompt=prompt
+)
+
+# Optionally delete the downloaded audio
+audio_file.unlink()
+```
+
+### Supported YouTube URLs
+
+- `https://youtube.com/watch?v=...`
+- `https://www.youtube.com/watch?v=...`
+- `https://youtu.be/...`
+- `https://m.youtube.com/watch?v=...`
+
+### YouTube Features
+
+- **Automatic audio extraction** - Downloads best quality audio
+- **MP3 conversion** - Automatically converts to MP3 format
+- **Progress tracking** - See download and transcription progress
+- **Cleanup option** - Optionally delete downloaded files after transcription
+- **Video information** - Shows video title and duration before processing
 
 ## API Reference
 
@@ -329,12 +423,24 @@ pip install openai python-dotenv
 
 ```
 notegenerator/
-├── transcribe.py           # Main Transcriber class
-├── example_transcribe.py   # Usage examples
-├── .env.example           # Example environment file
-├── .env                   # Your API key (git-ignored)
-├── requirements.txt       # Python dependencies
-└── README.md             # This file
+├── main.py                     # Interactive frontend (START HERE!)
+├── src/
+│   ├── transcribe.py          # Main Transcriber class
+│   ├── note_templates.py      # Template management
+│   └── youtube_downloader.py  # YouTube audio downloader
+├── templates/                  # Note formatting templates
+│   ├── study_guide.txt
+│   ├── meeting_minutes.txt
+│   ├── instructions.txt
+│   ├── summary.txt
+│   ├── verbatim_transcript.txt
+│   └── README.md
+├── example_transcribe.py      # Basic usage examples
+├── example_with_templates.py  # Template examples
+├── .env.example               # Example environment file
+├── .env                       # Your API key (git-ignored)
+├── requirements.txt           # Python dependencies
+└── README.md                  # This file
 ```
 
 ## Additional Implementations
