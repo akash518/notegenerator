@@ -8,7 +8,6 @@ to format transcriptions according to specific user needs.
 from pathlib import Path
 from typing import Literal
 
-
 # Define available template types
 NoteType = Literal[
     "study_guide",

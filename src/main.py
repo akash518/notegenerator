@@ -7,9 +7,9 @@ Users can transcribe audio from files or YouTube videos using various note templ
 
 import sys
 from pathlib import Path
-from src.transcribe import Transcriber
-from src.note_templates import NoteTemplates
-from src.youtube_downloader import YouTubeDownloader
+from transcribe import Transcriber
+from note_templates import NoteTemplates
+from youtube_downloader import YouTubeDownloader
 
 
 class NoteGeneratorApp:
