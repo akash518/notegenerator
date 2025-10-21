@@ -89,6 +89,60 @@ def main():
     except FileNotFoundError:
         print(f"Audio file '{audio_file}' not found.\n")
 
+    # Example 5: Save transcription to file
+    print("="*60)
+    print("Example 5: Save Transcription to File")
+    print("="*60)
+
+    try:
+        # Transcribe and save in one step
+        output_file = transcriber.transcribe_and_save(
+            audio_file,
+            "output/transcription.txt",
+            language='en'
+        )
+        print(f"\nTranscription saved to: {output_file}\n")
+
+    except FileNotFoundError:
+        print(f"Audio file '{audio_file}' not found.\n")
+
+    # Example 6: Save with timestamps
+    print("="*60)
+    print("Example 6: Save Transcription with Timestamps")
+    print("="*60)
+
+    try:
+        # Transcribe and save with timestamps
+        output_file = transcriber.transcribe_and_save(
+            audio_file,
+            "output/transcription_timestamped.txt",
+            language='en',
+            include_timestamps=True
+        )
+        print(f"\nTranscription with timestamps saved to: {output_file}\n")
+
+    except FileNotFoundError:
+        print(f"Audio file '{audio_file}' not found.\n")
+
+    # Example 7: Manual save (transcribe first, then save)
+    print("="*60)
+    print("Example 7: Manual Transcribe and Save")
+    print("="*60)
+
+    try:
+        # First transcribe
+        text = transcriber.transcribe_to_text(audio_file)
+
+        # Then save the result
+        output_file = transcriber.save_to_file(
+            text,
+            "output/manual_transcription.txt"
+        )
+        print(f"\nManually saved transcription to: {output_file}\n")
+
+    except FileNotFoundError:
+        print(f"Audio file '{audio_file}' not found.\n")
+
     print("="*60)
     print("Examples completed!")
     print("="*60)
@@ -124,17 +178,29 @@ if __name__ == "__main__":
         audio_file_arg = sys.argv[1]
         print(f"Transcribing: {audio_file_arg}\n")
 
-        # Quick transcription
-        text = quick_transcribe(audio_file_arg)
+        try:
+            transcriber = Transcriber()
 
-        if text:
-            print(f"Transcription:\n{text}\n")
-
-            # Optionally save to file
+            # Transcribe and save in one step
             audio_path = Path(audio_file_arg)
             output_file = audio_path.with_suffix('.txt')
-            output_file.write_text(text, encoding='utf-8')
-            print(f"Saved to: {output_file}")
+
+            saved_path = transcriber.transcribe_and_save(
+                audio_file_arg,
+                output_file
+            )
+
+            # Read and display the saved transcription
+            text = saved_path.read_text(encoding='utf-8')
+            print(f"Transcription:\n{text}\n")
+            print(f"Saved to: {saved_path}")
+
+        except ValueError as e:
+            print(f"Error: {e}")
+            print("\nMake sure you have created a .env file with your OPENAI_KEY:")
+            print("  OPENAI_KEY=your-api-key-here")
+        except FileNotFoundError:
+            print(f"Error: Audio file '{audio_file_arg}' not found.")
     else:
         # Run all examples
         main()

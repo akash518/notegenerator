@@ -218,3 +218,123 @@ class Transcriber:
                 })
 
         return segments
+
+    def save_to_file(
+        self,
+        text: str,
+        output_path: str | Path,
+        include_timestamps: bool = False,
+        segments: list[dict[str, Any]] | None = None
+    ) -> Path:
+        """
+        Save transcribed text to a file.
+
+        Args:
+            text (str): The transcribed text to save
+            output_path (str | Path): Path where the file will be saved
+            include_timestamps (bool): If True, format with timestamps (requires segments)
+            segments (list, optional): Timestamp segments for formatted output
+
+        Returns:
+            Path: The path to the saved file
+
+        Raises:
+            ValueError: If include_timestamps is True but segments is None
+        """
+        output_path = Path(output_path)
+
+        # Create parent directories if they don't exist
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+
+        if include_timestamps:
+            if not segments:
+                raise ValueError(
+                    "Cannot include timestamps without segments. "
+                    "Use transcribe_with_timestamps() to get segments first."
+                )
+
+            # Format with timestamps
+            lines = []
+            for i, segment in enumerate(segments, 1):
+                timestamp = f"[{self._format_time(segment['start'])} -> {self._format_time(segment['end'])}]"
+                lines.append(f"{timestamp} {segment['text']}")
+
+            content = '\n'.join(lines)
+        else:
+            content = text
+
+        # Write to file
+        output_path.write_text(content, encoding='utf-8')
+
+        return output_path
+
+    def transcribe_and_save(
+        self,
+        audio_input: str | Path,
+        output_path: str | Path,
+        language: str | None = None,
+        include_timestamps: bool = False,
+        **kwargs
+    ) -> Path:
+        """
+        Transcribe an audio file and save the result to a text file.
+
+        This is a convenience method that combines transcription and file saving.
+
+        Args:
+            audio_input (str | Path): Path to the audio file to transcribe
+            output_path (str | Path): Path where the transcription will be saved
+            language (str, optional): Language code (e.g., 'en', 'es', 'fr')
+            include_timestamps (bool): If True, include timestamps in the output
+            **kwargs: Additional arguments to pass to transcribe()
+
+        Returns:
+            Path: The path to the saved file
+        """
+        if include_timestamps:
+            # Get transcription with timestamps
+            segments = self.transcribe_with_timestamps(
+                audio_input,
+                language=language,
+                **kwargs
+            )
+            # Combine all segment text
+            text = ' '.join(segment['text'] for segment in segments)
+
+            # Save with timestamps
+            return self.save_to_file(
+                text,
+                output_path,
+                include_timestamps=True,
+                segments=segments
+            )
+        else:
+            # Get plain text transcription
+            text = self.transcribe_to_text(
+                audio_input,
+                language=language,
+                **kwargs
+            )
+
+            # Save without timestamps
+            return self.save_to_file(text, output_path)
+
+    @staticmethod
+    def _format_time(seconds: float) -> str:
+        """
+        Format seconds into MM:SS or HH:MM:SS format.
+
+        Args:
+            seconds (float): Time in seconds
+
+        Returns:
+            str: Formatted time string
+        """
+        hours = int(seconds // 3600)
+        minutes = int((seconds % 3600) // 60)
+        secs = int(seconds % 60)
+
+        if hours > 0:
+            return f"{hours:02d}:{minutes:02d}:{secs:02d}"
+        else:
+            return f"{minutes:02d}:{secs:02d}"

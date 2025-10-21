@@ -47,6 +47,7 @@ ENV/
 
 # Transcription outputs
 transcription*.txt
+output/
 
 # Model cache (Whisper downloads models here)
 ~/.cache/whisper/
