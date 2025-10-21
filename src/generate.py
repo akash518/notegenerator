@@ -21,15 +21,12 @@ class NoteGenerator:
     restructure and format it according to specific note-taking templates.
     """
 
-    def __init__(self, model: str = "gpt-3.5-turbo"):
+    def __init__(self, model: str = "gpt-5"):
         """
         Initialize the note generator.
 
         Args:
-            model (str): GPT model to use. Options:
-                        - 'gpt-3.5-turbo' (faster, cheaper)
-                        - 'gpt-4' (better quality, more expensive)
-                        - 'gpt-4-turbo-preview' (balance of speed and quality)
+            model (str): GPT model to use.
 
         Raises:
             ValueError: If API key is not provided
@@ -180,53 +177,11 @@ TRANSCRIPTION:
         except Exception as e:
             raise ValueError(f"Failed to stream notes generation: {str(e)}") from e
 
-    def estimate_cost(self, transcription: str, template: str) -> dict:
-        """
-        Estimate the cost of generating notes.
-
-        Args:
-            transcription (str): The transcription text
-            template (str): The template text
-
-        Returns:
-            dict: Estimated cost information including:
-                - 'input_tokens': Estimated input tokens
-                - 'output_tokens': Estimated output tokens
-                - 'estimated_cost': Estimated cost in USD
-        """
-        # Rough token estimation (1 token ≈ 4 characters)
-        input_chars = len(transcription) + len(template)
-        input_tokens = input_chars // 4
-
-        # Output is usually similar to input for note formatting
-        output_tokens = input_tokens  # Conservative estimate
-
-        # Pricing (as of 2024, may change)
-        pricing = {
-            'gpt-3.5-turbo': {'input': 0.0005 / 1000, 'output': 0.0015 / 1000},
-            'gpt-4': {'input': 0.03 / 1000, 'output': 0.06 / 1000},
-            'gpt-4-turbo-preview': {'input': 0.01 / 1000, 'output': 0.03 / 1000},
-        }
-
-        model_pricing = pricing.get(self.model, pricing['gpt-3.5-turbo'])
-
-        input_cost = input_tokens * model_pricing['input']
-        output_cost = output_tokens * model_pricing['output']
-        total_cost = input_cost + output_cost
-
-        return {
-            'input_tokens': input_tokens,
-            'output_tokens': output_tokens,
-            'estimated_cost_usd': round(total_cost, 4),
-            'model': self.model
-        }
-
-
 # Convenience function
 def generate_notes_from_transcription(
     transcription: str,
     template: str,
-    model: str = "gpt-3.5-turbo"
+    model: str = "gpt-5"
 ) -> str:
     """
     Quick helper to generate formatted notes.

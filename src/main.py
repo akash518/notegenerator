@@ -284,9 +284,6 @@ class NoteGeneratorApp:
             # Load template
             template = self.templates.get_template(template_id)
 
-            # Show cost estimate
-            cost_info = self.note_generator.estimate_cost(raw_transcription, template)
-            print(f"📊 Estimated cost: ${cost_info['estimated_cost_usd']:.4f} (using {cost_info['model']})")
             print("⏳ Generating formatted notes...")
 
             # Generate formatted notes
