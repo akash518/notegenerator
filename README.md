@@ -5,10 +5,12 @@ A Python library for transcribing audio recordings into text notes using OpenAI'
 ## Features
 
 - **Backend transcription** using OpenAI's Whisper API
+- **Note templates** for different formats (study guides, meeting minutes, instructions, etc.)
 - **Simple setup** with `.env` file for API key management
 - **Multiple audio formats** supported (mp3, wav, m4a, flac, ogg, mp4, webm)
 - **Timestamp support** for detailed transcriptions
 - **Fast cloud processing** - no local GPU needed
+- **Save to file** functionality with automatic directory creation
 - **Clean API** focused on core transcription functionality
 
 ## Installation
@@ -60,6 +62,72 @@ print(text)
 # Transcribe a file and save to text
 python example_transcribe.py your_recording.mp3
 ```
+
+## Note Templates
+
+Transform your transcriptions into organized, formatted notes using templates! Choose from 5 different note-taking styles:
+
+### Available Templates
+
+1. **Study Guide** - Comprehensive notes with key concepts, definitions, and examples
+2. **Meeting Minutes** - Professional documentation with action items and decisions
+3. **Instructions** - Step-by-step tutorials with troubleshooting
+4. **Summary** - Concise overview with key points only
+5. **Verbatim Transcript** - Word-for-word with timestamps and speaker identification
+
+### Using Templates
+
+```python
+from src.transcribe import Transcriber
+from src.note_templates import load_template
+
+# Initialize transcriber
+transcriber = Transcriber()
+
+# Load a template (study_guide, meeting_minutes, instructions, summary, verbatim_transcript)
+prompt = load_template('study_guide')
+
+# Transcribe with the template
+result = transcriber.transcribe(
+    'lecture.mp3',
+    prompt=prompt,
+    language='en'
+)
+
+# Save the formatted notes
+transcriber.save_to_file(result['text'], 'study_notes.txt')
+```
+
+### Interactive Template Selection
+
+```bash
+# Run the interactive example
+python example_with_templates.py your_audio.mp3
+```
+
+This will show you all available templates and let you choose which format you want for your notes.
+
+### Template Examples
+
+**Study Guide** - Perfect for lectures and educational content:
+```python
+prompt = load_template('study_guide')
+transcriber.transcribe_and_save('biology_lecture.mp3', 'bio_notes.txt', prompt=prompt)
+```
+
+**Meeting Minutes** - For professional meetings:
+```python
+prompt = load_template('meeting_minutes')
+transcriber.transcribe_and_save('team_meeting.mp3', 'minutes.txt', prompt=prompt)
+```
+
+**Quick Summary** - For fast overviews:
+```python
+prompt = load_template('summary')
+transcriber.transcribe_and_save('presentation.mp3', 'summary.txt', prompt=prompt)
+```
+
+See the [Templates README](templates/README.md) for detailed information on each template and how to customize them.
 
 ## API Reference
 
